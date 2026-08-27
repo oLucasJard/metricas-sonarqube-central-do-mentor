@@ -46,10 +46,20 @@ Projeto analisado: **Central do Mentor** — monorepo React 19 + TypeScript (fro
 ├── tests/
 │   ├── sessionUtils.test.ts           # 17 testes
 │   └── cn.test.ts                     # 5 testes
-└── prints/                            # capturas de tela do dashboard
+├── prints/                            # capturas de tela do dashboard
+└── projeto-analisado/                 # snapshot do código analisado
+    ├── backend/                       # Node.js + Express + SQLite
+    └── frontend/                      # React 19 + TypeScript + Vite
 ```
 
-O **código-fonte analisado não está neste repositório** — ele pertence ao repositório privado `BitStudioLabs/dspw_central_do_mentor`. Aqui estão apenas os artefatos produzidos pela análise.
+### Sobre o código em `projeto-analisado/`
+
+É um **snapshot** do projeto Central do Mentor, incluído para permitir a reprodução integral da análise. Observações:
+
+- O código pertence ao repositório **`BitStudioLabs/dspw_central_do_mentor`** e foi desenvolvido pela equipe. Este repositório é um trabalho acadêmico de análise, não a fonte canônica do projeto — para contribuir com o sistema, use o repositório original.
+- O **histórico Git original não foi replicado** — apenas os arquivos, na versão analisada (commit `a48ae1a`).
+- Dependências (`node_modules`), artefatos de build e o relatório de cobertura foram excluídos.
+- As senhas presentes em `frontend/src/data/mockData.ts` são **dados fictícios** (`'123456'`) e o valor de `JWT_SECRET` no código é um **placeholder** — ambos apontados pela própria análise e discutidos na seção 5.6 do documento.
 
 ---
 
@@ -76,15 +86,19 @@ Após ~1 min: http://localhost:9000 — login `admin` / `admin` (troca obrigató
 O SonarQube **não executa testes** — ele apenas lê um relatório no formato `lcov`. Este passo precisa rodar **antes** do scanner.
 
 ```bash
-cd frontend
+cd projeto-analisado/frontend
 npm install
-npm install -D vitest @vitest/coverage-v8
 npm run test:coverage      # gera frontend/coverage/lcov.info
 ```
 
+O Vitest e o provider de cobertura já estão declarados no `package.json`, junto com os scripts `test` e `test:coverage`.
+
 ### 3. Rodar a análise
 
+A partir de `projeto-analisado/`, onde está o `sonar-project.properties`:
+
 ```bash
+cd projeto-analisado
 docker run --rm \
   -e SONAR_HOST_URL="http://host.docker.internal:9000" \
   -e SONAR_TOKEN="SEU_TOKEN" \
