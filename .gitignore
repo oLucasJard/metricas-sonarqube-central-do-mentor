@@ -1,0 +1,12 @@
+node_modules/
+coverage/
+dist/
+build/
+.scannerwork/
+.env
+.env.*
+*.log
+
+# nunca versionar tokens do SonarQube
+token.txt
+*.token
