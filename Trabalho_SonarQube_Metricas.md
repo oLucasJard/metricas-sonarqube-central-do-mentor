@@ -28,8 +28,9 @@ curl -s -u admin:admin http://localhost:9000/api/languages/list
 
 O retorno lista 27 linguagens suportadas (Java, JavaScript, TypeScript, Python, C#, C/C++, Go, Kotlin, PHP, Ruby, Scala, entre outras) — **Haskell não está entre elas**. Como o Sonar mede apenas o que consegue parsear, um projeto Haskell produziria 0 linhas de código e todas as métricas vazias. Por isso o projeto foi trocado por um em TypeScript/JavaScript.
 
-> **[PRINT 0]** — Tela inicial do projeto no SonarQube
-> URL: `http://localhost:9000/dashboard?id=central-do-mentor`
+![Dashboard geral do projeto no SonarQube](prints/00-dashboard.png)
+
+*Figura 1 — Visão geral do projeto (aba **Overall Code**), com o Quality Gate reprovado e as condições que falharam.*
 
 ---
 
@@ -145,7 +146,7 @@ Resultado: `ANALYSIS SUCCESSFUL`, 79 arquivos analisados em ~2min30.
 |---|---|---|
 | Complexidade Ciclomática | 2.182 (cognitiva: 1.320) | — |
 | Duplications | 13,8% — 3.534 linhas em 250 blocos | — |
-| Code Smells | 113 — dívida de 774 min (12h54) | **A** |
+| Code Smells | 113 — dívida de 774 min (exibida como `1d 4h`) | **A** |
 | Coverage | 0,8% (linha 0,7% / branch 0,9%) | — |
 | Bugs | 10 | **C** |
 | Security Hotspots | 8 (0% revisados) | Review **E** |
@@ -180,8 +181,9 @@ Onde aparece no dashboard:
 Regras relacionadas que geram issue automaticamente no perfil *Sonar way*:
 - `typescript:S3776` — Cognitive Complexity of functions should not be too high (limite padrão: **15**)
 
-> **[PRINT 1]** — Complexidade ciclomática por arquivo
-> URL: `http://localhost:9000/component_measures?id=central-do-mentor&metric=complexity`
+![Complexidade ciclomática por arquivo](prints/01-complexidade.png)
+
+*Figura 2 — Complexidade ciclomática distribuída por arquivo.*
 
 ### Resultado obtido
 
@@ -253,8 +255,9 @@ Arquivos mais duplicados:
 | `frontend/src/contexts/OnboardingContext.tsx` | 41,7% | 2 |
 | `frontend/src/pages/Register.tsx` | 41,2% | 16 |
 
-> **[PRINT 2]** — Duplicação por arquivo
-> URL: `http://localhost:9000/component_measures?id=central-do-mentor&metric=duplicated_lines_density`
+![Duplicação de código por arquivo](prints/02-duplicacao.png)
+
+*Figura 3 — Densidade de linhas duplicadas por arquivo.*
 
 ### Interpretação dos insights
 
@@ -317,8 +320,10 @@ Onde aparece no dashboard:
 |---|---|
 | **Code Smells** | **113** |
 | **Maintainability Rating** | **A** |
-| Technical Debt | 774 min (**12h54**) |
+| Technical Debt | 774 min — exibido como **`1d 4h`** |
 | Technical Debt Ratio | 0,1% |
+
+> **Sobre a unidade:** o dashboard mostra `1d 4h`, não `12h54`. O SonarQube converte a dívida em **dias úteis de 8 horas** (configurável em `Administration → General → Number of working hours per day`). Assim, 774 min = 12,9 h = 1 dia (8 h) + 4,9 h.
 
 Principais smells (todos CRITICAL):
 
@@ -330,8 +335,9 @@ Principais smells (todos CRITICAL):
 | `SessionsFeed.tsx` | 493 | Refactor this function to reduce its Cognitive Complexity |
 | `SessionsPage.tsx` | 475 | Refactor this function to reduce its Cognitive Complexity |
 
-> **[PRINT 3]** — Lista de Code Smells
-> URL: `http://localhost:9000/project/issues?id=central-do-mentor&resolved=false&types=CODE_SMELL`
+![Lista de Code Smells](prints/03-code-smells.png)
+
+*Figura 4 — Code Smells detectados, ordenados por severidade.*
 
 ### Interpretação dos insights
 
@@ -428,10 +434,13 @@ sonar.typescript.lcov.reportPaths=frontend/coverage/lcov.info
 
 **Ordem importa:** o `npm run test:coverage` precisa rodar **antes** do scanner. Se o `lcov.info` não existir no momento da análise, o Sonar simplesmente reporta 0% sem erro visível.
 
-> **[PRINT 4]** — Cobertura de testes
-> URL: `http://localhost:9000/component_measures?id=central-do-mentor&metric=coverage`
->
-> **[PRINT 4b]** — Terminal com os 22 testes passando e o resumo de cobertura
+![Cobertura de testes por arquivo](prints/04-coverage.png)
+
+*Figura 5 — Cobertura de testes por arquivo no SonarQube.*
+
+![Saída do terminal com os 22 testes](prints/04b-testes-terminal.png)
+
+*Figura 6 — Execução de `npm run test:coverage`: 22 testes aprovados e a tabela de cobertura que origina o `lcov.info`. Note `src/utils` com 100% e o total de 1,11%.*
 
 ### Resultado obtido
 
@@ -537,8 +546,9 @@ Todos os 10 bugs, agrupados por tipo:
 | `SessionsFeed.tsx` | 610 | Convert the conditional to a boolean to avoid leaked value |
 | `SessionsPage.tsx` | 597 | Convert the conditional to a boolean to avoid leaked value |
 
-> **[PRINT 5]** — Lista de Bugs
-> URL: `http://localhost:9000/project/issues?id=central-do-mentor&resolved=false&types=BUG`
+![Lista de Bugs](prints/05-bugs.png)
+
+*Figura 7 — Os 10 bugs MAJOR identificados.*
 
 ### Interpretação dos insights
 
@@ -613,8 +623,9 @@ Detalhamento dos 8 hotspots:
 | `insecure-conf` | LOW | `backend/src/server.js:20` | Make sure that enabling CORS is safe here |
 | `others` | LOW | `backend/src/server.js:16` | Make sure disclosing the fingerprinting of this web technology is safe |
 
-> **[PRINT 6]** — Security Hotspots
-> URL: `http://localhost:9000/security_hotspots?id=central-do-mentor`
+![Security Hotspots](prints/06-hotspots.png)
+
+*Figura 8 — Os 8 Security Hotspots agrupados por categoria, com o trecho de código sinalizado.*
 
 ### Interpretação dos insights
 
@@ -696,11 +707,13 @@ curl -u TOKEN: -X POST "http://localhost:9000/api/qualitygates/select" \
 
 **Passo 4 — Reexecutar a análise.** Este passo é **obrigatório e fácil de esquecer**: o status do Quality Gate é calculado **no momento da análise**. Trocar o gate não reavalia o projeto retroativamente — sem uma nova análise, o dashboard continua exibindo o resultado do gate anterior.
 
-> **[PRINT 7]** — Definição do Quality Gate customizado
-> URL: `http://localhost:9000/quality_gates`
->
-> **[PRINT 7b]** — Status do gate no dashboard do projeto (faixa vermelha "Failed")
-> URL: `http://localhost:9000/dashboard?id=central-do-mentor`
+![Definição do Quality Gate customizado](prints/07-quality-gate.png)
+
+*Figura 9 — Quality Gate customizado: as 6 condições sobre Overall Code criadas para este trabalho, somadas às 6 herdadas sobre New Code.*
+
+![Quality Gate aplicado ao projeto](prints/07b-gate-status.png)
+
+*Figura 10 — Confirmação de que o gate customizado está associado ao projeto.*
 
 ### Resultado obtido
 

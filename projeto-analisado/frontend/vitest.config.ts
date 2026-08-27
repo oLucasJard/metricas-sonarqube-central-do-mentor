@@ -23,7 +23,9 @@ export default defineConfig({
       provider: 'v8',
       // lcov gera o coverage/lcov.info que o SonarQube consome;
       // text imprime o resumo no terminal.
-      reporter: ['text', 'lcov'],
+      // skipFull: false garante que arquivos 100% cobertos apareçam na
+      // tabela do terminal (por padrao o reporter de texto os omite).
+      reporter: [['text', { skipFull: false }], 'lcov'],
       reportsDirectory: './coverage',
       // all: true faz o relatorio incluir TODOS os arquivos de src,
       // inclusive os que nenhum teste toca (contam como 0%).
