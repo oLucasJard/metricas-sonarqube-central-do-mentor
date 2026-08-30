@@ -2,7 +2,7 @@
 
 **Disciplina:** Métricas e Estimativas de Software
 **Curso:** Engenharia de Software — CEULP/ULBRA
-**Aluno:** Lucas Jardim
+**Integrantes do grupo:** Lucas Jardim, Matheus José, William Dias
 **Projeto analisado:** Central do Mentor (`dspw_central_do_mentor`)
 **Ferramenta:** SonarQube Community Edition 9.9.8 LTS (via Docker)
 **Data da análise:** 26/08/2026
@@ -13,12 +13,14 @@
 
 O **Central do Mentor** é um sistema de mentoria que conecta mentores experientes a aprendizes. É um monorepo com duas aplicações:
 
-| Camada | Stack | Arquivos | Linhas |
+| Camada | Stack | Arquivos (`.js`/`.ts`/`.tsx`) | Linhas brutas |
 |---|---|---|---|
 | Backend | Node.js + Express + SQLite (JavaScript, ESM) | 22 | 3.347 |
-| Frontend | React 19 + TypeScript + Vite + Tailwind | 55 | 20.536 |
+| Frontend | React 19 + TypeScript + Vite + Tailwind | 55 (53 de produção + 2 de teste) | 20.536 |
 
 Após a análise, o SonarQube contabilizou **77 arquivos**, **23.289 linhas de código (NCLOC)** e **1.003 funções**.
+
+> **Sobre as duas contagens.** A coluna acima é de **linhas brutas** (tudo, inclusive comentários e linhas em branco); o número do SonarQube é de **NCLOC** — apenas linhas com código efetivo, o que explica a diferença para menos. O scanner reportou **79 arquivos analisados**, e o painel exibe **77**: a diferença são os 2 arquivos de teste, que o `sonar.test.inclusions` classifica como código de teste e por isso ficam fora da métrica `files` do projeto.
 
 A escolha do projeto não foi trivial e vale registrar: a primeira tentativa foi analisar um projeto em **Haskell**, mas o SonarQube **não possui analisador para essa linguagem**. Isso foi comprovado consultando a própria API do servidor:
 
@@ -351,7 +353,7 @@ Isso mostra que o Maintainability Rating **não deve ser usado sozinho** como in
 
 O conteúdo dos smells confirma o diagnóstico já visto na seção 5.1: os 5 mais severos são **todos** de complexidade cognitiva excessiva, nos mesmos arquivos. As três métricas — complexidade, duplicação e smells — estão apontando para o mesmo conjunto de arquivos.
 
-**O que melhorar:** 12h54 de dívida é um valor perfeitamente absorvível em uma sprint. Atacar os 5 smells CRITICAL resolve simultaneamente o problema de complexidade cognitiva. O rating não vai melhorar (já é A), mas a legibilidade sim — e é esse o ganho real.
+**O que melhorar:** 774 min (`1d 4h`) de dívida é um valor perfeitamente absorvível em uma sprint. Atacar os 5 smells CRITICAL resolve simultaneamente o problema de complexidade cognitiva. O rating não vai melhorar (já é A), mas a legibilidade sim — e é esse o ganho real.
 
 ---
 
@@ -451,7 +453,9 @@ sonar.typescript.lcov.reportPaths=frontend/coverage/lcov.info
 | Branch Coverage | 0,9% |
 | Linhas a cobrir | 3.775 |
 | Linhas não cobertas | 3.747 |
-| Testes | 22 |
+| Testes executados (Vitest) | 22 |
+
+> **Por que o dashboard mostra `Unit Tests: –`?** Os 22 testes são um dado do **Vitest**, não do SonarQube. O `lcov.info` carrega apenas *quais linhas foram executadas* — ele não diz quantos testes rodaram, nem quais passaram. Para o Sonar exibir a contagem de testes seria preciso um **relatório de execução** separado, apontado por `sonar.testExecutionReportPaths` (formato *Generic Test Execution*), que não foi configurado neste trabalho porque o enunciado pede a métrica **Coverage**, e essa depende apenas do `lcov`. É por isso que a Figura 1 mostra `0,8%` de cobertura e, ao lado, um traço em *Unit Tests*.
 
 Por arquivo:
 
@@ -556,9 +560,38 @@ O rating **C** decorre da regra do pior caso: os 10 bugs são MAJOR, e **um úni
 
 O achado mais valioso é que os 10 bugs se reduzem a **apenas dois padrões repetidos**, o que muda completamente a estimativa de correção:
 
-**O padrão do "valor vazado"** é o mais perigoso, e é um erro clássico de React. Escrever `{lista.length && <Componente/>}` parece correto, mas quando `lista.length` é **0**, o JavaScript não retorna `false` — retorna o número `0`, e o React **renderiza o zero na tela**. O usuário vê um "0" solto na interface onde deveria haver espaço vazio. É um bug visual real, que só se manifesta no caso de lista vazia — exatamente o cenário que menos se testa manualmente. A correção é trivial: `{lista.length > 0 && <Componente/>}`.
+**O padrão do "valor vazado"** é o mais perigoso, e é um erro clássico de React. As 4 ocorrências são literalmente a mesma linha, replicada entre arquivos:
 
-**O padrão do "valor de retorno ignorado"** indica confusão entre métodos mutáveis e imutáveis de array. Provavelmente o código usa o retorno de uma função que altera o estado sem retornar nada útil — sintoma de gestão de estado inconsistente.
+```tsx
+{session.maxParticipants && (
+```
+
+Parece correto, mas `maxParticipants` é um **número**. Quando vale **0**, o JavaScript não devolve `false` — devolve o próprio `0`, e o React **renderiza o zero na tela**. O usuário vê um "0" solto na interface onde deveria haver espaço vazio. É um bug visual real, que só se manifesta quando a sessão não tem vagas — exatamente o cenário que menos se testa manualmente. A correção é trivial:
+
+```tsx
+{session.maxParticipants > 0 && (
+```
+
+**O padrão do "valor de retorno ignorado"** vem do uso do **operador vírgula** dentro de um `&&`. As 6 ocorrências são a mesma linha, repetida por cópia:
+
+```tsx
+onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+```
+
+A expressão `(e.preventDefault(), handleAddTag())` avalia as duas chamadas e **devolve o valor da última** — e `handleAddTag()` não retorna nada (`void`). Esse `undefined` vira o resultado do `&&` e, por consequência, o valor de retorno da arrow function. O Sonar sinaliza justamente isso: está se **usando como valor** o resultado de uma função que não produz valor algum. Não é um defeito visível em tela, mas é código que engana quem lê — sugere que `handleAddTag()` retorna algo relevante quando não retorna.
+
+A correção é abrir o corpo da função em vez de espremer tudo em uma expressão:
+
+```tsx
+onKeyPress={(e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    handleAddTag();
+  }
+}}
+```
+
+Vale notar, de passagem, que `onKeyPress` está **deprecado** no React desde a versão 17 — o correto hoje seria `onKeyDown`. O SonarQube não apontou isso, o que reforça a observação feita na seção 5.6 sobre os limites da análise estática.
 
 Vale observar que **todos os 10 bugs estão no frontend**. O backend, com 3.347 linhas, não gerou nenhum. Duas leituras possíveis: o backend é mais simples e direto (o que é plausível, dado o padrão MVC bem separado), ou as regras de análise para JavaScript puro são menos densas que as de TypeScript/React. Provavelmente ambas.
 
@@ -675,7 +708,7 @@ Esta é a segunda métrica que **exige configuração**.
 
 ```bash
 curl -u TOKEN: -X POST "http://localhost:9000/api/qualitygates/create" \
-  -d "name=Metricas UNILUPULBRA - Central do Mentor"
+  -d "name=Metricas ULBRA - Central do Mentor"
 ```
 
 **Passo 2 — Definir as condições.** Interface: `Add Condition`, escolhendo métrica, operador e limiar. Por API:
@@ -697,6 +730,11 @@ Foram adicionadas **6 condições sobre o Overall Code**, com os limiares justif
 | `security_hotspots_reviewed` | `LT` | **100%** | Todo hotspot deve ser revisado — é processo, não esforço de código |
 
 O gate herdou também as **6 condições padrão sobre New Code**, totalizando **12 condições**.
+
+**Sobre o aviso do próprio SonarQube.** Ao adicionar condições sobre Overall Code, o servidor exibe o alerta visível na Figura 9: *"Extra conditions are not recommended — you added extra conditions to the 'Clean as You Code' quality gate"*. O aviso é coerente com a filosofia da ferramenta e foi mantido de propósito, por duas razões:
+
+1. **O enunciado exige** demonstrar a configuração de limiares customizados, e as condições padrão do *Sonar way* incidem apenas sobre New Code — em um projeto sem código novo desde a linha de base, elas quase não teriam o que avaliar.
+2. **O objetivo aqui é diagnóstico, não pipeline.** O gate foi usado para medir a dívida acumulada de uma base legada, que é precisamente o que o *Clean as You Code* opta por não olhar. Em um pipeline de CI/CD real, a recomendação do Sonar é a correta — e é isso que se discute ao final desta seção.
 
 **Passo 3 — Associar ao projeto:**
 

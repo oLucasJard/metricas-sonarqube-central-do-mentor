@@ -17,7 +17,7 @@ Projeto analisado: **Central do Mentor** — monorepo React 19 + TypeScript (fro
 |---|---|---|
 | Complexidade Ciclomática | 2.182 (cognitiva 1.320) — média 2,18/função | — |
 | Duplications | **13,8%** — 3.534 linhas em 250 blocos | — |
-| Code Smells | 113 — dívida técnica de 12h54 | **A** |
+| Code Smells | 113 — dívida técnica de 774 min (`1d 4h`) | **A** |
 | Coverage | **0,8%** — 3.747 de 3.775 linhas sem teste | — |
 | Bugs | 10 (todos MAJOR) | **C** |
 | Security Hotspots | 8 — 0% revisados | Review **E** |
