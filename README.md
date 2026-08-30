@@ -5,6 +5,8 @@ Trabalho da disciplina **Métricas e Estimativas de Software** — Engenharia de
 Aplicação do **SonarQube Community Edition** sobre um projeto real, com configuração do ambiente, execução da análise e interpretação de 7 métricas de produto.
 
 > 📄 **[Leia o documento completo →](Trabalho_SonarQube_Metricas.md)**
+>
+> 📋 Para uma visão em 3 páginas: **[Resumo_Executivo.md](Resumo_Executivo.md)** (versão `.docx` no repositório)
 
 ---
 
@@ -39,6 +41,8 @@ Projeto analisado: **Central do Mentor** — monorepo React 19 + TypeScript (fro
 .
 ├── README.md                          # este arquivo
 ├── Trabalho_SonarQube_Metricas.md     # documento completo do trabalho
+├── Trabalho_SonarQube_Metricas.docx   # documento completo (entrega)
+├── Resumo_Executivo.docx              # resumo de 3 páginas para entrega
 ├── config/
 │   ├── sonar-project.properties       # configuração da análise
 │   ├── vitest.config.ts               # configuração de testes e cobertura
